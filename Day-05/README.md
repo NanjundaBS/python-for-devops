@@ -1,6 +1,7 @@
 Command Line Argument :
 
 Command line arguments are another way to read user-provided input into a Python program, distinct from using the input() function. Instead of providing input during the program's execution, you pass arguments from the command prompt at the time of executing the Python script.
+
 To pass command-line arguments, you type the py command followed by the script name (e.g., test.py) and then any arguments separated by spaces. For example: py test.py 10 20 30. In this case, 10, 20, and 30 are considered command-line arguments.
 
 Within a Python script, you can read these command-line arguments using the sys module and its argv variable. The sys module is a predefined module in Python. The argv variable, present inside the sys module, allows you to access the command-line arguments. To use it, you first need to import it from the sys module: from sys import argv.
@@ -10,6 +11,7 @@ The argv variable is a list. This is because the order of command-line arguments
 When you access elements of the argv list using indexing (e.g., argv), it's crucial to understand that the first element (argv) is always the name of the Python file being executed. It is not the first argument you pass after the script name. So, for the command py test.py 10 20 30, argv will be 'test.py', argv will be '10', argv will be '20', and argv will be '30'.
 
 You can iterate through all the command-line arguments, including the script name, using a for loop:
+
 
 from sys import argv
 for arg in argv:
@@ -27,6 +29,7 @@ print(x)
 
 
 When you pass command-line arguments, they are always considered as string type. Even if you pass numbers, they are treated as strings. Therefore, if you intend to perform numerical operations on these arguments, you must explicitly convert them to the desired numeric type (e.g., integer using int()).
+
 A practical example demonstrating this is calculating the sum of numbers provided as command-line arguments. To sum the numbers, you need to iterate through the argv list starting from the second element (index 1) to ignore the script name, convert each argument to an integer, and then add it to a running sum:
 
 from sys import argv
