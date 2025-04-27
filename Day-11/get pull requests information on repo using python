@@ -1,0 +1,36 @@
+Okay, here are the detailed, step-by-step instructions on how to get pull request information from a GitHub repository using Python, drawing on the information from the provided sources:
+The task is to write a Python script to get pull requests information on a GitHub repository.
+To implement this, you will write a Python script on your machine that interacts with GitHub. Interacting with a tool like GitHub using a script typically involves using its API (Application Programming Interface). Python has a very popular generic module called requests for talking to APIs.
+Here are the steps for the algorithm to achieve this task:
+
+Step 1: Use the requests module.
+
+* You need to install the requests module. This can be done using pip install requests.
+* After installation, you need to import the module in your Python script using import requests.
+
+Step 2: Make the API call.
+
+* Using the requests module, you need to make an API call to GitHub.
+* To make the API call, you need to know the URL for accessing the GitHub API specifically for pull requests.
+* This URL can be found in the GitHub API documentation. You would search for "pulls" in the documentation to find the relevant Rest API reference.
+* The general structure of the URL is part of api.github.com. You need to replace placeholders in the documentation URL with the specific owner (organization) and repository name you are interested in. For example, for the Kubernetes project, the owner and repo name are both kubernetes, so the URL becomes https://api.github.com/repos/kubernetes/kubernetes/pulls.
+* In Python, you make a GET request to this URL using requests.get().
+* The output of this call, which is the response from the GitHub API, is received into a variable (e.g., response). This response is an object that contains different information, including the HTTP status code (response.status_code) to check if the call was successful (e.g., 200 for success) and the actual data.
+
+Step 3: Convert the JSON to a dictionary.
+
+* Most tools you interact with, including GitHub, return information back in JSON format.
+* Python can perform operations easily on its native data types. Dictionaries are the closest native Python data type to JSON and are easy to work with.
+* When you use the function response.json() on the response object, this automatically converts the received JSON data into a Python dictionary (or list of dictionaries) internally. You can store this converted data in another variable (e.g., complete_detail = response.json()).
+
+Step 4: Print the required information.
+
+* Printing the entire complete_detail object might result in a very large and unreadable output.
+* The data received from the GitHub API for pull requests is typically a list of dictionaries. Each dictionary in the list represents a single pull request and contains its properties.
+* To access specific information, you need to traverse this list and the dictionaries within it.
+* You can access a specific pull request (dictionary) by its index in the list, similar to accessing elements in a regular Python list (e.g., complete_detail for the first pull request).
+* Once you have a specific pull request dictionary, you can access the value of a property by providing the key name in square brackets (e.g., complete_detail['ID'] to get the ID of the first pull request). Keys like 'ID', 'user', 'type', etc., represent the properties.
+* If properties are nested (e.g., user details within the 'user' key), you can chain the access (e.g., complete_detail['user']['login'] to get the login name of the user who created the first pull request).
+
+To print information for all pull requests in the list, you can use a for loop to iterate through the complete_detail list. Inside the loop, you access each element (which is a dictionary representing a pull request) and extract the required information using the key names. For example, for element in complete_detail: or using indices for i in range(len(complete_detail)): print(complete_detail[i]['user']['login']) to print the login name for each.
+This process allows you to retrieve structured information about pull requests from GitHub using Python, converting the JSON response into a usable dictionary format for further processing. Using dictionaries with key-value pairs makes the data easy to understand and access compared to just storing values in a list without labels.
