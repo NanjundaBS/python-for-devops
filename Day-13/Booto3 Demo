@@ -1,0 +1,117 @@
+Okay, let's break down the steps required to perform the demo described in the sources for Cloud Cost Optimization using a Lambda function and Boto3 to delete stale EBS snapshots.
+
+Here are the steps, drawing directly from the information provided:
+
+1.  **Prerequisite: Have an AWS Account and Access the Console**
+    *   You need an AWS account.
+    *   Log in to your AWS Management Console.
+
+2.  **Create the Resources That Will Become Stale**
+    *   Go to the **EC2 dashboard** in the AWS console.
+    *   Launch an **EC2 instance**.
+        *   Give it a name (e.g., "test ec2 instance").
+        *   Select an AMI (e.g., Ubuntu) and instance type (e.g., T2 micro).
+        *   Choose or create a key pair.
+        *   Keep the default attached volume.
+        *   Launch the instance.
+    *   Wait for the instance to be in a **running state**.
+    *   Identify the **Volume ID** attached to this instance. You can find this in the storage tab of the instance details.
+    *   Go to the **Snapshots** section under EBS in the EC2 dashboard.
+    *   Click **"Create snapshot"**.
+    *   Select the **Volume ID** you identified in the previous step.
+    *   Give the snapshot a name (e.g., "test snapshot").
+    *   Click "Create snapshot".
+    *   The snapshot status will initially show as pending but should get created quickly.
+
+3.  **Create the AWS Lambda Function**
+    *   Go to the **Lambda** service in the AWS console.
+    *   Click **"Create a function"**.
+    *   Select **"Author from scratch"**.
+    *   Give your function a name (e.g., "cost optimization EBS snapshot").
+    *   Choose **Python** as the Runtime.
+    *   Under "Change default execution role", keep the default option to **"Create a new role with basic Lambda permissions"**. You will 
+        update permissions later.
+    *   Click **"Create function"**.
+
+4.  **Add the Python Code to the Lambda Function**
+    *   Once the function is created, you will see the code editor area.
+    *   Go to the source's GitHub repository and find the Python code for EBS stale snapshots (`EBS_stale_snapshots.py`).
+    *   **Copy the entire code** from that file.
+    *   Paste the copied code into the **Lambda function's code editor**, replacing the default code that was there.
+    *   Click the **"Deploy"** button to save the code.
+
+5.  **Configure Lambda Timeout and Permissions**
+    *   **Increase the function timeout:**
+        *   Go to the **"Configuration"** tab of your Lambda function.
+        *   Click **"General configuration"** and then click **"Edit"**.
+        *   Find the **"Timeout"** setting. The default is 3 seconds.
+        *   Change it to a higher value, such as 10 seconds.
+        *   Click **"Save"**.
+    *   **Grant necessary IAM permissions:** The Lambda function needs permissions to interact with EC2 to list and delete snapshots and 
+           volumes.
+        *   Go back to the **"Configuration"** tab and click on **"Permissions"**.
+        *   Click on the **"Execution role"** name. This will open the IAM console page for the role created for your Lambda function.
+        *   On the role's page, click **"Add permissions"** and then **"Attach policies"**.
+        *   You need to grant permissions for `ec2:DescribeSnapshots`, `ec2:DeleteSnapshot`, `ec2:DescribeVolumes`, and 
+            `ec2:DescribeInstances`.
+        *   Since these might not be in standard policies, you might need to **create a custom policy**:
+            *   (Optional) Open a new tab and go to the IAM service -> Policies -> Create policy.
+            *   Choose the **EC2 service**.
+            *   Under "Actions", select the required permissions: **`DescribeSnapshots`**, **`DeleteSnapshot`**, **`DescribeVolumes`**, 
+                **`DescribeInstances`**.
+            *   Under "Resources", select **"All resources"** for simplicity in the demo.
+            *   Click "Next" and provide a **name** for the policy (e.g., "CostOptimizationEBS").
+            *   Click "Create policy".
+        *   Go back to the Lambda execution role page.
+        *   Click **"Add permissions"** -> **"Attach policies"** again.
+        *   Search for the custom policy you just created ("CostOptimizationEBS").
+        *   Select the policy and click **"Add permissions"**.
+
+6.  **Test the Lambda Function (Before Deleting Resources)**
+    *   Go back to your Lambda function's code tab.
+    *   Click the **"Test"** button.
+    *   If this is the first time testing, configure a test event. Give it any name (e.g., "test") and keep the default JSON content. 
+         Click **"Save"**.
+    *   Click the **"Test"** button again.
+    *   The function should execute successfully now that permissions are granted.
+    *   **Expected Outcome:** The function should *not* delete the snapshot at this stage because the EC2 instance and its volume still 
+       exist.
+    *   **Verification:** Go back to the EC2 Snapshots dashboard and **refresh the page**. Confirm that the "test snapshot" is still 
+       present.
+
+7.  **Make the Resources Stale (Delete the Instance and Volume)**
+    *   Go back to the **EC2 dashboard**.
+    *   Find the "test ec2 instance" you created.
+    *   **Terminate** the instance.
+    *   Terminating the EC2 instance typically also deletes the volume it was attached to if it was the root volume.
+    *   **Verification:** Verify in the EC2 console that the instance is terminated and its associated volume is also gone. Crucially, 
+         verify that the "test snapshot" you created **still exists**. This snapshot is now "stale" from the perspective of being 
+         associated with a running instance or existing volume.
+
+8.  **Test the Lambda Function Again (After Resources are Stale)**
+    *   Go back to your Lambda function's code tab.
+    *   Click the **"Test"** button again. You can use the same "test" event.
+    *   The function will execute.
+    *   **Expected Outcome:** The function should now identify the snapshot as stale (because its associated volume is not found or not 
+        attached to a running instance) and delete it. The function logs should indicate the deletion.
+    *   **Verification:** Go back to the EC2 Snapshots dashboard and **refresh the page**. The "test snapshot" should now be deleted.
+
+9.  **Optional: Set up a CloudWatch Trigger for Automation**
+    *   This project demonstrates automating cost optimization. Running the Lambda manually is for testing. For recurring checks (e.g., 
+        daily), you'd use a trigger.
+    *   Go to the **CloudWatch** service in the AWS console.
+    *   Go to **Events** (or EventBridge) -> **Rules**.
+    *   Click **"Create rule"**.
+    *   Give the rule a name (e.g., "EBS-snapshots-rule").
+    *   Under "Event Source", select **"Schedule"**.
+    *   Choose **"Cron-based schedule"**. Enter a cron expression to define how often you want the Lambda to run (e.g., `0 10 * * ? *` 
+        for 10:00 AM UTC every day).
+    *   Under "Targets", click **"Add target"**.
+    *   Select **"Lambda function"** from the dropdown.
+    *   Select the name of your Lambda function ("cost optimization EBS snapshot").
+    *   Click **"Configure details"** (or Next).
+    *   Review the rule details and click **"Create rule"**.
+    *   **Note:** Be mindful of the cost if you set up recurring triggers and forget about them, as the Lambda function will continue to 
+        execute.
+
+By following these steps, you replicate the demonstration of using Boto3 within a Python Lambda function, triggered either manually or by CloudWatch, to automate a crucial DevOps task: identifying and deleting stale resources for cloud cost optimization. The code logic specifically targets snapshots based on whether their associated volume exists or is attached to a running instance.
