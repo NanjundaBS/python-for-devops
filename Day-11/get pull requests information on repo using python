@@ -1,6 +1,7 @@
 Okay, here are the detailed, step-by-step instructions on how to get pull request information from a GitHub repository using Python, drawing on the information from the provided sources:
 The task is to write a Python script to get pull requests information on a GitHub repository.
 To implement this, you will write a Python script on your machine that interacts with GitHub. Interacting with a tool like GitHub using a script typically involves using its API (Application Programming Interface). Python has a very popular generic module called requests for talking to APIs.
+
 Here are the steps for the algorithm to achieve this task:
 
 Step 1: Use the requests module.
