@@ -1,0 +1,55 @@
+This project, covered across two videos (Day 14 and Day 15 of the Python for DevOps series), focuses on automating the creation of Jira tickets based on comments made on GitHub issues. The goal is to provide a solution for development teams to easily track valid bugs reported on GitHub within their Jira board without manual effort.
+
+**Problem Statement:**
+
+*   Quality Assurance (QE) engineers or other teams report bugs by creating issues on a GitHub repository.
+*   Developers need to review (triage) these issues to determine if they are genuine bugs requiring work.
+*   If a GitHub issue is deemed a valid bug, the developer needs to create a corresponding ticket on their Jira dashboard to track the work.
+*   Manually logging into Jira, navigating the backlog, and entering details for potentially hundreds of issues daily is time-consuming and considered operational work for developers.
+
+**The Solution: GitHub-Jira Automation**
+
+The solution automates this process by creating a bridge between GitHub and Jira using Python. The core idea is that a developer can simply comment on a valid GitHub issue with a specific command (e.g., `/slj`), and a Jira ticket is automatically created.
+
+The project is broken down into two main parts:
+
+
+
+
+**Part 1 (Day 14): Interacting with the Jira API using Python**
+
+This part focuses on writing a Python script to programmatically interact with Jira's API.
+
+1.  **Jira Setup:** The first step is to set up a Jira instance. Jira offers a free tier for up to 10 users, which can be set up by signing up on the Atlassian website and choosing a scrum project template.
+2.  **Creating a Jira API Token:** To make API calls programmatically, an API token is required for authentication, similar to using a username and password for UI login but providing better security and management capabilities. This token is generated from the user's profile settings under the security section. It's recommended practice to read the API token securely using environment variables.
+3.  **Understanding Jira API Documentation:** Jira is highlighted as having excellent API documentation, making it easy for beginners to understand how to make API calls. The documentation shows how to perform various actions like listing projects or creating issues and often provides code snippets in different languages, including Python.
+4.  **Writing Python Scripts to Interact with Jira:**
+    *   **Listing Projects:** A script using the `requests` module is shown to fetch a list of projects from Jira by making a GET request to the appropriate API endpoint. The response is in JSON format, which needs to be handled in Python, typically by converting it to a dictionary using `json.loads` to access specific data like project names. Authentication is handled using HTTP Basic Authentication with the user's email and API token.
+    *   **Creating an Issue:** Another script is developed to create a Jira ticket (referred to as an 'issue' in Jira). This involves making a POST request to the Jira API. The script requires a JSON payload containing the details for the new issue. Identifying the mandatory fields (project, issue type, summary) is crucial, often learned by examining the Jira UI or documentation. Important details like the issue type ID (e.g., for 'Story') and project key (e.g., 'AB' for project 'Abishek') need to be found, often by inspecting Jira's configuration settings or URL.
+
+
+
+
+**Part 2 (Day 15): Building a Python Flask API and Integrating with GitHub Webhooks**
+
+This part focuses on converting the Python script into a web application (API) and setting up the trigger mechanism from GitHub.
+
+1.  **Understanding APIs:** An API (Application Interface) is explained as a way for applications to talk to each other programmatically, distinct from a User Interface (UI) which is for human interaction. APIs make automation much more feasible than trying to automate UI clicks.
+2.  **HTTP Request Types:** Fundamental API actions based on the HTTP protocol are explained: GET (retrieve information), POST (send information to create a resource), PUT (send information to update a resource), and DELETE (remove a resource). It's clarified that GitHub sends a **POST** request via the webhook to the Python application, and the Python application sends a **POST** request to the Jira API to create the issue.
+3.  **Building a Flask Application:** Flask is a Python web framework used to create web applications or APIs.
+    *   A simple Flask application is created by importing the `Flask` module, instantiating a Flask app (`app = Flask(__name__)`), defining a Python function that will handle requests, and using the `app.route()` decorator above the function to map a URL path (like `/` or `/create-jira`) to that function.
+    *   The Part 1 Python script for creating a Jira issue is placed inside a function within the Flask application. Instead of printing the result, the function will return a response, as it's an API. The decorator for this function is set to handle **POST** requests on a specific route, like `/create-jira`.
+    *   The Flask app includes an `app.run()` method to start a development server, listening on a specified IP address and port (default 5000). Organizations typically deploy Flask apps using a production server and a Web Server Gateway Interface (WSGI).
+4.  **Deploying the Flask Application:** The Flask application needs to run on a server accessible from the internet so GitHub can send requests to it. An EC2 instance is used as an example server. The required Flask and requests modules need to be installed on the server.
+5.  **Setting up the GitHub Webhook:**
+    *   On the GitHub repository settings, under the 'Webhooks' section, a new webhook is added.
+    *   The **Payload URL** is configured to be the address of the Flask application running on the EC2 instance (e.g., `http://<EC2-Public-IP-or-DNS>:5000/create-jira`).
+    *   The **Content type** is set to `application/json`.
+    *   Under "Which events would you like to trigger this webhook?", the **Issue comments** event is selected, ensuring the webhook is triggered only when a comment is made on an issue.
+6.  **Conditional Handling:** The webhook, as configured initially, sends a POST request to the Flask application for *any* comment on an issue. To ensure a Jira ticket is only created when the comment is the specific keyword (e.g., `/slj`), the Python code in the Flask function needs to inspect the JSON payload received from GitHub. The payload contains details about the comment, including its body. An `if` condition is added to check if the comment body equals `/slj` before making the API call to Jira. This conditional check was left as an assignment.
+
+
+
+**Overall Flow:**
+
+A user comments `/slj` on a GitHub issue. GitHub, via the configured webhook listening for issue comments, sends a JSON payload containing details about the comment and issue to the Flask application hosted on the EC2 instance (specifically to the configured webhook URL). The Flask application receives this POST request, processes the JSON payload (checking if the comment was `/slj`), and if the condition is met, it makes a POST request to the Jira API (using the `requests` module and API token) to create a new issue with relevant details from the GitHub payload. Jira then creates the ticket.
