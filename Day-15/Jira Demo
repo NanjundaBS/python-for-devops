@@ -1,0 +1,37 @@
+Based on the provided sources and our conversation history, here are the steps you can take to effectively dismantle or "archive" the demo setup described:
+
+The demo involves integrating GitHub, a Python Flask application hosted on an EC2 instance, and Jira. To archive this setup, you would need to disconnect and remove these components. The sources mention the following key actions for cleaning up:
+
+1.  **Stop the Flask Application Server:** The Python Flask application runs on a development server, likely hosted on an EC2 instance. 
+      The integration stops working when this server is stopped.
+    *   Access the server (e.g., your EC2 instance) where you ran the Python script that started the Flask application (like `            
+        GitHub_Jira.py` mentioned in).
+    *   Stop the running Python process. Typically, if you ran it directly in a terminal, pressing `Ctrl+C` would stop it. The source     
+        doesn't specify the exact command but confirms the application can be stopped.
+    *   Once stopped, the Flask application will no longer be running on the specified IP address and port (default 5000).
+    *   GitHub webhooks attempting to connect to this URL will fail.
+
+2.  **Delete the GitHub Webhook:** The webhook configured on your GitHub repository sends information to the Flask application. Removing 
+       this webhook disconnects the trigger mechanism.
+    *   Go to your GitHub repository where the webhook was configured.
+    *   Navigate to the **Settings** of the repository.
+    *   Scroll down and find the **Webhooks** section.
+    *   Find the webhook you created for the Jira integration, which would point to your EC2 instance URL (e.g., `http://<EC2-Public-IP- 
+        or-     DNS>:5000/create-jira`).
+    *   Click on the webhook to edit or view its details.
+    *   There should be an option to **Delete webhook**. Confirm the deletion.
+    *   Deleting the webhook ensures that GitHub no longer attempts to send POST requests to your Flask application when issue comments 
+        are made.
+
+3.  **Delete the Jira Board/Project:** The demo involved setting up a Jira instance and creating a specific project. One of the sources 
+       mentions deleting the entire board after the demo.
+    *   Log in to your Jira instance.
+    *   Navigate to the project you created for this demo (e.g., the one with the key 'AB').
+    *   Find the project settings or administration section.
+    *   Look for an option to delete or archive the project. The source explicitly states the intent to **delete this entire board**, 
+        implying the removal of the project and its associated data used for the demo. The specific steps within the Jira UI to delete a 
+        project are not detailed in the provided sources.
+
+These steps, drawn directly from the sources, will stop the running application, remove the GitHub trigger, and clean up the Jira project used in the demo.
+
+*   *(Note: The sources mention hosting the Flask application on an EC2 instance, but they do not explicitly include terminating the EC2 instance itself as part of the demo archiving steps. Terminating the EC2 instance would be a common practice to stop incurring cloud costs, but this specific step is not detailed in the provided transcripts.)*
